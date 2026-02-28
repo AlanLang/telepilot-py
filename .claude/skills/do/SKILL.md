@@ -46,7 +46,15 @@ git commit -m "<简短中文描述>"
 git push
 ```
 
-记录 commit hash（`git rev-parse --short HEAD`）用于报告。
+记录 commit hash 和 GitHub 链接用于报告：
+
+```bash
+COMMIT_HASH=$(git rev-parse --short HEAD)
+REMOTE_URL=$(git remote get-url origin)
+# 将 git@github.com:user/repo.git 转换为 https://github.com/user/repo
+GITHUB_URL=$(echo "$REMOTE_URL" | sed 's|git@github.com:|https://github.com/|;s|\.git$||')
+COMMIT_URL="${GITHUB_URL}/commit/${COMMIT_HASH}"
+```
 
 ### 5. 安装依赖（仅 requirements.txt 有变化时）
 
@@ -82,6 +90,7 @@ sudo systemctl is-active telepilot-py
 📦 依赖：{无变化 | 已安装：包名}
 🔄 服务：{active ✓ | failed ✗}
 🔖 Commit：{7位hash}
+🔗 {GitHub commit URL}
 ```
 
 发送命令：
