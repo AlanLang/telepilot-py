@@ -50,9 +50,7 @@ def _single_chinese_char(text: str) -> Optional[str]:
 
 
 class CharTracker:
-    def __init__(self, notifier, hostname: str):
-        self.notifier = notifier
-        self.hostname = hostname
+    def __init__(self):
         self._lock = asyncio.Lock()
         self._counts: dict[str, int] = {}
         self._cooldowns: dict[str, datetime] = {}  # char -> 冷却到期时间（UTC）
@@ -125,10 +123,5 @@ class CharTracker:
             try:
                 await client.send_message(chat.id, ch)
                 logger.info(f"[发送] 成功发送 '{ch}'，已进入 1 小时冷却")
-                await self.notifier.send(
-                    f"✅ <b>已跟发</b>：{ch}\n"
-                    f"🖥 主机：<code>{self.hostname}</code>\n"
-                    f"💬 群组：{chat_name}"
-                )
             except Exception as e:
                 logger.warning(f"[发送] 发送 '{ch}' 失败: {e}")

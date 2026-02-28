@@ -53,7 +53,7 @@ async def main() -> None:
         phone_number=phone,
     )
 
-    tracker = CharTracker(notifier, hostname)
+    tracker = CharTracker()
 
     @app.on_message(filters.chat(MONITORED_CHATS) & ~filters.outgoing)
     async def on_message(client, message):
