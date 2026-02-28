@@ -4,12 +4,14 @@
 TOKEN/CHAT_ID 从项目根目录 .env 读取（NOTIFY_BOT_TOKEN / NOTIFY_CHAT_ID）。
 
 用法: python3 send-tg.py "消息内容"        # 发送文本消息
-     python3 send-tg.py --typing           # 发送正在输入状态
+     python3 send-tg.py --typing           # 发送一次正在输入状态
+     python3 send-tg.py --typing-loop      # 每 4 秒持续发送，直到被 kill
      echo "消息内容" | python3 send-tg.py  # 从 stdin 读取
 """
 import json
 import os
 import sys
+import time
 import urllib.request
 from pathlib import Path
 
@@ -52,6 +54,17 @@ def typing() -> None:
         print(f"TG typing 发送失败: {e}", file=sys.stderr)
 
 
+def typing_loop(interval: int = 4) -> None:
+    """每隔 interval 秒持续发送 typing，直到进程被 kill。"""
+    _, chat_id = _load_env()
+    while True:
+        try:
+            _post("sendChatAction", {"chat_id": chat_id, "action": "typing"})
+        except Exception:
+            pass
+        time.sleep(interval)
+
+
 def send(text: str) -> None:
     _, chat_id = _load_env()
     try:
@@ -63,7 +76,9 @@ def send(text: str) -> None:
 
 
 if __name__ == "__main__":
-    if "--typing" in sys.argv:
+    if "--typing-loop" in sys.argv:
+        typing_loop()
+    elif "--typing" in sys.argv:
         typing()
     else:
         if len(sys.argv) > 1:

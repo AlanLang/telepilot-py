@@ -17,10 +17,14 @@ description: 在 telepilot-py 项目中按描述执行任务。若为编码任�
 
 ### 0. 发送输入状态
 
-任务开始时**立即**执行，让用户感知到已收到指令：
+**必须是执行的第一个 Bash 命令，不得推迟。** 以后台进程持续发送 typing，整个任务期间用户都能看到"正在输入"状态：
 
 ```bash
-python3 /home/alan/code/telepilot-py/.claude/skills/do/scripts/send-tg.py --typing
+# 清理上次可能残留的 PID，启动新的后台 typing 循环
+[ -f /tmp/do-typing.pid ] && kill $(cat /tmp/do-typing.pid) 2>/dev/null; rm -f /tmp/do-typing.pid
+python3 /home/alan/code/telepilot-py/.claude/skills/do/scripts/send-tg.py --typing-loop &
+echo $! > /tmp/do-typing.pid
+echo "TG typing loop started (PID: $(cat /tmp/do-typing.pid))"
 ```
 
 ### 1. 理解任务并判断类型
@@ -97,6 +101,12 @@ sudo systemctl is-active telepilot-py
 
 ### A7. 发送 Telegram 报告（编码任务）
 
+先停止后台 typing 循环，再发送报告：
+
+```bash
+kill $(cat /tmp/do-typing.pid 2>/dev/null) 2>/dev/null; rm -f /tmp/do-typing.pid
+```
+
 报告控制在 **1500 字符以内**，格式如下：
 
 ```
@@ -130,6 +140,12 @@ sudo systemctl is-active telepilot-py
 
 ### B2. 发送 Telegram 报告（非编码任务）
 
+先停止后台 typing 循环，再发送报告：
+
+```bash
+kill $(cat /tmp/do-typing.pid 2>/dev/null) 2>/dev/null; rm -f /tmp/do-typing.pid
+```
+
 报告控制在 **1500 字符以内**，格式如下：
 
 ```
@@ -162,4 +178,7 @@ python3 /home/alan/code/telepilot-py/.claude/skills/do/scripts/send-tg.py "报�
 sudo journalctl -u telepilot-py -n 5 --no-pager
 ```
 
-**任何步骤失败**：先发 TG 通知（前缀 `❌`），再终止。
+**任何步骤失败**：先停止 typing 循环，发 TG 通知（前缀 `❌`），再终止：
+```bash
+kill $(cat /tmp/do-typing.pid 2>/dev/null) 2>/dev/null; rm -f /tmp/do-typing.pid
+```
