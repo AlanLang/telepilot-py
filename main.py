@@ -15,6 +15,7 @@ from pyrogram import Client, filters
 
 from char_tracker import CharTracker
 from notifier import Notifier
+from watchdog import ConnectionWatchdog
 
 load_dotenv()
 
@@ -54,6 +55,7 @@ async def main() -> None:
     )
 
     tracker = CharTracker()
+    watchdog = ConnectionWatchdog(notifier, hostname)
 
     @app.on_message(filters.chat(MONITORED_CHATS) & ~filters.outgoing)
     async def on_message(client, message):
@@ -73,10 +75,12 @@ async def main() -> None:
 
     async with app:
         logger.info("已连接到 Telegram，开始监听消息...")
+        watchdog.start()
         await notifier.send(
             f"🚀 <b>telepilot 已启动</b>\n🖥 主机：<code>{hostname}</code>"
         )
         await stop_event.wait()
+        watchdog.stop()
         await notifier.send(
             f"🛑 <b>telepilot 已停止</b>\n🖥 主机：<code>{hostname}</code>"
         )
